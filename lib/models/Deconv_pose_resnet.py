@@ -144,6 +144,7 @@ class PoseResNet(nn.Module):
 
     def __init__(self, block, layers, cfg, **kwargs):
         self.inplanes = 64
+        print("deconv start")
         extra = cfg.MODEL.EXTRA
         self.deconv_with_bias = extra.DECONV_WITH_BIAS
 
@@ -245,7 +246,8 @@ class PoseResNet(nn.Module):
     def forward(self, x):
         # Input: 256x256x3
         # Encoder Part
-        print("Input: " + x.shape)
+        print("Input: ")
+        print(x.shape)
         x = self.conv1(x)  # 128x128x64
         print("conv1: " + x.shape)
         x = self.bn1(x)
