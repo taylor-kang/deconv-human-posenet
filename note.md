@@ -44,7 +44,20 @@ def train():
 
 ```
 
-### 3. layers
+### 3. 
+|           layer_name | output_size                   | layer                                                                                                  |
+|---------------------:|-------------------------------|--------------------------------------------------------------------------------------------------------|
+|                Input | 256x256x3                     |                                                                                                        |
+|                conv1 | 128x128x64                    | 7x7, 64, stride 2, padding 3                                                                           |
+|                  bn1 |                               |                                                                                                        |
+|                 relu |                               |                                                                                                        |
+|              maxpool | 64x64x64                      | 3x3, S:2, P:1                                                                                          |
+| conv2_x (layer1) X 3 | 64x64x256                     | 1x1, 64, S:1   3x3, 64, S:1, P:1  1x1, 64→256 ( 1x1, 64→256, S:1 [downsample for input] )              |
+|  conv3_x(layer2) X 4 | 32x32x512                     | 1x1, 256→128, S:1 3x3, 128, S:2, P:1 1x1, 128→512 ( 1x1, 256→512, S:2 [downsample for input] )         |
+|  conv4_x(layer3) X 6 | 16x16x1024                    | 1x1, 512→256, S:1 3x3, 256, S:2, P:1 1x1, 256→1024 ( 1x1, 512→1024, S:2 [downsample for input] )       |
+|  conv5_x(layer4) X 3 | 8x8x2048                      | 1x1, 1024→512, S:1 3x3, 512, S:2, P:1 1x1, 512→2048 ( 1x1, 1024→2048, S:2 [downsample for input] )     |
+|               deconv | 16x16x256 32X32X256 64X64X256 | 4x4, 2048→256, S:2, Pin:1, Pout: 0 4x4, 256→256, S:2, Pin:1, Pout: 0 4x4, 256→256, S:2, Pin:1, Pout: 0 |
+|                final | 64X64X16                      | 1X1, 256→16, S:1, P:0                                                                                  |
 
 
 
