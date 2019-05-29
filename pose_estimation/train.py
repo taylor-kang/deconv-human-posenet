@@ -153,14 +153,14 @@ def main():
         train_dataset,
         batch_size=config.TRAIN.BATCH_SIZE*len(gpus),
         shuffle=config.TRAIN.SHUFFLE,
-        num_workers=config.WORKERS,
+        num_workers=0,
         pin_memory=True
     )
     valid_loader = torch.utils.data.DataLoader(
         valid_dataset,
         batch_size=config.TEST.BATCH_SIZE*len(gpus),
         shuffle=False,
-        num_workers=config.WORKERS,
+        num_workers=0,
         pin_memory=True
     )
 

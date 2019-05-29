@@ -103,6 +103,8 @@ def main():
     args = parse_args()
     reset_config(config, args)
 
+    num_workers=0
+    
     logger, final_output_dir, tb_log_dir = create_logger(
         config, args.cfg, 'valid')
 
@@ -152,7 +154,8 @@ def main():
         valid_dataset,
         batch_size=config.TEST.BATCH_SIZE*len(gpus),
         shuffle=False,
-        num_workers=config.WORKERS,
+        #num_workers=config.WORKERS,
+        num_workers=0,
         pin_memory=True
     )
 
