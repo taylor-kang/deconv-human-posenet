@@ -244,7 +244,7 @@ class PoseResNet(nn.Module):
 
         x = self.deconv_layers(x)
         x = self.final_layer(x)
-
+        
         return x
 
     def init_weights(self, pretrained=''):
