@@ -8,3 +8,4 @@ json_tricks
 scikit-image
 tensorboardX>=1.2
 torchvision
+torchsummary
