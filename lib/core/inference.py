@@ -27,6 +27,7 @@ def get_max_preds(batch_heatmaps):
     batch_size = batch_heatmaps.shape[0]
     num_joints = batch_heatmaps.shape[1]
     width = batch_heatmaps.shape[3]
+    # reashape: 4d (batch_size, num_joint, h,w) -> 3D (batch_size, num_joint, h*w)
     heatmaps_reshaped = batch_heatmaps.reshape((batch_size, num_joints, -1))
     idx = np.argmax(heatmaps_reshaped, 2)
     maxvals = np.amax(heatmaps_reshaped, 2)

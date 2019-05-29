@@ -10,6 +10,9 @@ from __future__ import print_function
 
 import torch.nn as nn
 
+# MSELoss(x:output ,y: target): Mean squared error
+# output x, target y (x-y)^2
+
 
 class JointsMSELoss(nn.Module):
     def __init__(self, use_target_weight):

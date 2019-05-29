@@ -15,7 +15,6 @@ import torch
 import torch.nn as nn
 from collections import OrderedDict
 
-
 BN_MOMENTUM = 0.1
 logger = logging.getLogger(__name__)
 
@@ -158,6 +157,7 @@ class PoseResNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(64, momentum=BN_MOMENTUM)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        # res50=> block:Bottleneck, layers=> [3, 4, 6, 3]
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
@@ -165,10 +165,14 @@ class PoseResNet(nn.Module):
 
         # used for deconv layers
         self.deconv_layers = self._make_deconv_layer(
-            extra.NUM_DECONV_LAYERS,
-            extra.NUM_DECONV_FILTERS,
-            extra.NUM_DECONV_KERNELS,
+            extra.NUM_DECONV_LAYERS,  # 3
+            extra.NUM_DECONV_FILTERS,  # [256, 256, 256]
+            extra.NUM_DECONV_KERNELS,  # [4, 4, 4]
         )
+
+        self.deconv1 = self._make_deconv_layer(1, [256], [4])
+        self.deconv2 = self._make_deconv_layer(1, [256], [4])
+        self.deconv3 = self._make_deconv_layer(1, [256], [4])
 
         self.final_layer = nn.Conv2d(
             in_channels=extra.NUM_DECONV_FILTERS[-1],
@@ -209,6 +213,8 @@ class PoseResNet(nn.Module):
         return deconv_kernel, padding, output_padding
 
     def _make_deconv_layer(self, num_layers, num_filters, num_kernels):
+        # num_filters: [256, 256, 256]
+        # num_kernels: [4, 4, 4]
         assert num_layers == len(num_filters), \
             'ERROR: num_deconv_layers is different len(num_deconv_filters)'
         assert num_layers == len(num_kernels), \
@@ -219,6 +225,7 @@ class PoseResNet(nn.Module):
             kernel, padding, output_padding = \
                 self._get_deconv_cfg(num_kernels[i], i)
 
+            # ConvTranspose2d(in_channels, out_channels, kernel_size, stride=1, padding=0)
             planes = num_filters[i]
             layers.append(
                 nn.ConvTranspose2d(
@@ -236,19 +243,36 @@ class PoseResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        x = self.conv1(x)
+        # Input: 256x256x3
+        # Encoder Part
+        print("Input: " + x.shape)
+        x = self.conv1(x)  # 128x128x64
+        print("conv1: " + x.shape)
         x = self.bn1(x)
         x = self.relu(x)
-        x = self.maxpool(x)
+        x = self.maxpool(x)  # 64x64x64
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+        x = self.layer1(x)  # 64x64x256
+        print("layer1: " + x.shape)
+        x = self.layer2(x)  # 32x32x512
+        print("layer2: " + x.shape)
+        x = self.layer3(x)  # 16x16x1024
+        print("layer3: " + x.shape)
+        x = self.layer4(x)  # 8x8x2048
+        print("layer4: " + x.shape)
 
-        x = self.deconv_layers(x)
-        x = self.final_layer(x)
-        
+        # Decoder Part
+        # x = self.deconv_layers(x)   # 64X64X256
+        x = self.deconv1(x)
+        print("deconv1: " + x.shape)
+        x = self.deconv2(x)
+        print("deconv2: " + x.shape)
+        x = self.deconv3(x)
+        print("deconv3: " + x.shape)
+        x = self.final_layer(x)  # 64X64X16
+        print("final_layer: " + x.shape)
+
+        # Output: 64X64X16
         return x
 
     def init_weights(self, pretrained=''):

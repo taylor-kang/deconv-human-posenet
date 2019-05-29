@@ -21,6 +21,7 @@ import torch.utils.data
 import torch.utils.data.distributed
 import torchvision.transforms as transforms
 from tensorboardX import SummaryWriter
+from torchsummary import summary
 
 import _init_paths
 from core.config import config
@@ -100,7 +101,7 @@ def main():
         final_output_dir)
 
     writer_dict = {
-        'writer': SummaryWriter(log_dir=tb_log_dir),
+        'writer': SummaryWriter(log_dir=tb_log_dir),  # SummaryWriter: log Writer
         'train_global_steps': 0,
         'valid_global_steps': 0,
     }
@@ -112,7 +113,10 @@ def main():
     writer_dict['writer'].add_graph(model, (dump_input, ), verbose=False)
 
     gpus = [int(i) for i in config.GPUS.split(',')]
+    # nn.DataParallel(): batch size should be larger than the number of GPUs used
     model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
+
+    # summary(model, input_size=(256, 256, 3))
 
     # define loss function (criterion) and optimizer
     criterion = JointsMSELoss(
@@ -172,7 +176,6 @@ def main():
         # train for one epoch
         train(config, train_loader, model, criterion, optimizer, epoch,
               final_output_dir, tb_log_dir, writer_dict)
-
 
         # evaluate on validation set
         perf_indicator = validate(config, valid_loader, valid_dataset, model,
