@@ -43,12 +43,13 @@ POSE_RESNET.HEATMAP_SIZE = [64, 64]  # width * height, ex: 24 * 32
 POSE_RESNET.SIGMA = 2
 
 MODEL_EXTRAS = {
-    'pose_resnet': POSE_RESNET,
+    'pose_resnet': POSE_RESNET
 }
 
 # common params for NETWORK
 config.MODEL = edict()
 config.MODEL.NAME = 'pose_resnet'
+# config.MODEL.NAME = 'Deconv_pose_resnet'
 config.MODEL.INIT_WEIGHTS = True
 config.MODEL.PRETRAINED = ''
 config.MODEL.NUM_JOINTS = 16
