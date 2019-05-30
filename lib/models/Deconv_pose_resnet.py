@@ -246,21 +246,22 @@ class PoseResNet(nn.Module):
     def forward(self, x):
         # Input: 256x256x3
         # Encoder Part
-        print("Input: ")
         print(x.shape)
         x = self.conv1(x)  # 128x128x64
         x = self.bn1(x)
         x = self.relu(x)
         conv1_out = self.maxpool(x)  # 64x64x64
-
+        print(conv1_out.shape)
+        
         layer1_out = self.layer1(conv1_out)  # 64x64x256
         layer2_out = self.layer2(layer1_out)  # 32x32x512
         layer3_out = self.layer3(layer2_out)  # 16x16x1024
         layer4_out = self.layer4(layer3_out)  # 8x8x2048
-
+        print(layer4_out.shape)
         # Decoder Part
         # x = self.deconv_layers(x)   # 64X64X256
         x = torch.cat([self.deconv1(layer4_out), layer3_out], dim=1)  # connection
+        print(x.shape)
         x = nn.Conv2d(in_channels=2048, out_channels=1024, kernel_size=3, stride=1, padding=1, bias=False)(x)
 
         x = torch.cat([self.deconv2(x), layer2_out], dim=1)  # connection
@@ -335,6 +336,7 @@ resnet_spec = {18: (BasicBlock, [2, 2, 2, 2]),
 
 
 def get_pose_net(cfg, is_train, **kwargs):
+    print("Deconv start")
     num_layers = cfg.MODEL.EXTRA.NUM_LAYERS
     style = cfg.MODEL.STYLE
 

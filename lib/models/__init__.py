@@ -9,3 +9,4 @@ from __future__ import division
 from __future__ import print_function
 
 import models.pose_resnet
+import models.Deconv_pose_resnet

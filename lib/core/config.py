@@ -207,7 +207,7 @@ def get_model_name(cfg):
     name = cfg.MODEL.NAME
     full_name = cfg.MODEL.NAME
     extra = cfg.MODEL.EXTRA
-    if name in ['pose_resnet']:
+    if 'pose_resnet' in name:
         name = '{model}_{num_layers}'.format(
             model=name,
             num_layers=extra.NUM_LAYERS)
