@@ -170,10 +170,10 @@ class PoseResNet(nn.Module):
             extra.NUM_DECONV_KERNELS,  # [4, 4, 4]
         )
 
-        self.deconv1 = self._make_deconv_layer(1, [1024], [4])
-        self.deconv2 = self._make_deconv_layer(1, [512], [4])
-        self.deconv3 = self._make_deconv_layer(1, [256], [4])
-        self.deconv4 = self._make_deconv_layer(1, [64], [4])
+        self.deconv1 = self._make_deconv(in_channels=2048, out_channels=1024, kernel=4)
+        self.deconv2 = self._make_deconv(in_channels=1024, out_channels=512, kernel=4)
+        self.deconv3 = self._make_deconv(in_channels=512, out_channels=256, kernel=4)
+        self.deconv4 = self._make_deconv(in_channels=256, out_channels=64, kernel=4)
 
         self.final_layer = nn.Conv2d(
             in_channels=extra.NUM_DECONV_FILTERS[-1],
@@ -212,6 +212,23 @@ class PoseResNet(nn.Module):
             output_padding = 0
 
         return deconv_kernel, padding, output_padding
+
+    def _make_deconv(self, in_channels, out_channels, kernel=4, padding=1, output_padding=0):
+        layers = []
+        # ConvTranspose2d(in_channels, out_channels, kernel_size, stride=1, padding=0)
+        layers.append(
+            nn.ConvTranspose2d(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=kernel,
+                stride=2,
+                padding=padding,
+                output_padding=output_padding,
+                bias=self.deconv_with_bias))
+        layers.append(nn.BatchNorm2d(in_channels, momentum=BN_MOMENTUM))
+        layers.append(nn.ReLU(inplace=True))
+
+        return nn.Sequential(*layers)
 
     def _make_deconv_layer(self, num_layers, num_filters, num_kernels):
         # num_filters: [256, 256, 256]
@@ -255,9 +272,7 @@ class PoseResNet(nn.Module):
         layer1_out = self.layer1(conv1_out)  # [32,256,64,64]
         layer2_out = self.layer2(layer1_out)  # [32,512,32,32]
         layer3_out = self.layer3(layer2_out)  # [32,1024,16,16]
-        print(layer3_out)
         layer4_out = self.layer4(layer3_out)  # [32,2048,8,8]
-        print(layer4_out)
         # Decoder Part
         # x = self.deconv_layers(x)   # 64X64X256
         x = self.deconv1(layer4_out)  # [32,1024,16, 16]
