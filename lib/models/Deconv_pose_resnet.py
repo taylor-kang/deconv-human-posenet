@@ -244,34 +244,37 @@ class PoseResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        # Input: 256x256x3
+        # Input: [32,3, 256, 256]
         # Encoder Part
         print(x.shape)
-        x = self.conv1(x)  # 128x128x64
+        x = self.conv1(x)  # [32,64,128,128]
         x = self.bn1(x)
         x = self.relu(x)
-        conv1_out = self.maxpool(x)  # 64x64x64
-        print(conv1_out.shape)
-        
-        layer1_out = self.layer1(conv1_out)  # 64x64x256
-        layer2_out = self.layer2(layer1_out)  # 32x32x512
-        layer3_out = self.layer3(layer2_out)  # 16x16x1024
-        layer4_out = self.layer4(layer3_out)  # 8x8x2048
-        print(layer4_out.shape)
+        conv1_out = self.maxpool(x)  # [32,64,64,64]
+
+        layer1_out = self.layer1(conv1_out)  # [32,256,64,64]
+        layer2_out = self.layer2(layer1_out)  # [32,512,32,32]
+        layer3_out = self.layer3(layer2_out)  # [32,1024,16,16]
+        print(layer3_out)
+        layer4_out = self.layer4(layer3_out)  # [32,2048,8,8]
+        print(layer4_out)
         # Decoder Part
         # x = self.deconv_layers(x)   # 64X64X256
-        x = torch.cat([self.deconv1(layer4_out), layer3_out], dim=1)  # connection
-        print(x.shape)
-        x = nn.Conv2d(in_channels=2048, out_channels=1024, kernel_size=3, stride=1, padding=1, bias=False)(x)
+        x = self.deconv1(layer4_out)  # [32,1024,16, 16]
+        x = torch.cat([x, layer3_out], dim=1)  # connection [32,2048,16, 16]
+        x = nn.Conv2d(in_channels=2048, out_channels=1024, kernel_size=1, stride=1, padding=0, bias=False)(x)
 
-        x = torch.cat([self.deconv2(x), layer2_out], dim=1)  # connection
-        x = nn.Conv2d(in_channels=1024, out_channels=512, kernel_size=3, stride=1, padding=1, bias=False)(x)
+        x = self.deconv2(x)
+        x = torch.cat([x, layer2_out], dim=1)  # connection
+        x = nn.Conv2d(in_channels=1024, out_channels=512, kernel_size=1, stride=1, padding=0, bias=False)(x)
 
-        x = torch.cat([self.deconv3(x), layer1_out], dim=1)  # connection
-        x = nn.Conv2d(in_channels=512, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False)(x)
+        x = self.deconv3(x)
+        x = torch.cat([x, layer1_out], dim=1)  # connection
+        x = nn.Conv2d(in_channels=512, out_channels=256, kernel_size=1, stride=1, padding=0, bias=False)(x)
 
-        x = torch.cat([self.deconv4(x), conv1_out], dim=1)  # connection
-        x = nn.Conv2d(in_channels=128, out_channels=16, kernel_size=3, stride=1, padding=1, bias=False)(x)
+        x = self.deconv4(x)
+        x = torch.cat([x, conv1_out], dim=1)  # connection
+        x = nn.Conv2d(in_channels=128, out_channels=16, kernel_size=1, stride=1, padding=0, bias=False)(x)
         # x = self.final_layer(x)  # 64X64X16
 
         # Output: 64X64X16
