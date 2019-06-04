@@ -176,9 +176,14 @@ class PoseResNet(nn.Module):
         self.deconv4 = self._make_deconv(in_channels=256, out_channels=64, kernel=4)
 
         self.reduc_conv1 = nn.Conv2d(in_channels=2048, out_channels=1024, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn2 = nn.BatchNorm2d(1024, momentum=BN_MOMENTUM)
         self.reduc_conv2 = nn.Conv2d(in_channels=1024, out_channels=512, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn3 = nn.BatchNorm2d(512, momentum=BN_MOMENTUM)
         self.reduc_conv3 = nn.Conv2d(in_channels=512, out_channels=256, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn4 = nn.BatchNorm2d(256, momentum=BN_MOMENTUM)
         self.reduc_conv4 = nn.Conv2d(in_channels=256, out_channels=16, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn5 = nn.BatchNorm2d(16, momentum=BN_MOMENTUM)
+        
         self.final_layer = nn.Conv2d(
             in_channels=extra.NUM_DECONV_FILTERS[-1],
             out_channels=cfg.MODEL.NUM_JOINTS,
@@ -281,13 +286,26 @@ class PoseResNet(nn.Module):
         x = self.deconv1(layer4_out)  # [32,1024,16, 16]
         x = torch.cat([x, layer3_out], dim=1)  # connection [32,2048,16, 16]
         x = self.reduc_conv1(x) 
+        x = self.bn2(x) 
+        x = nn.ReLU(inplace=True)(x)
+        
         x = self.deconv2(x)
         x = torch.cat([x, layer2_out], dim=1)  # connection
         x = self.reduc_conv2(x)
+        x = self.bn3(x)
+        x = nn.ReLU(inplace=True)(x)
+
         x = self.deconv3(x)
         x = torch.cat([x, layer1_out], dim=1)  # connection
         x = self.reduc_conv3(x)
+        x = self.bn4(x)
+        x = nn.ReLU(inplace=True)(x)
+        
         x = self.reduc_conv4(x)
+        x = self.bn5(x)
+        x = nn.ReLU(inplace=True)(x)
+
+
         # x = nn.Conv2d(in_channels=256, out_channels=64, kernel_size=1, stride=1, padding=0, bias=False)(x)
         # x = torch.cat([x, conv1_out], dim=1)  # connection
         # x = nn.Conv2d(in_channels=256, out_channels=16, kernel_size=1, stride=1, padding=0, bias=False)(x)
