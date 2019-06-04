@@ -11,6 +11,7 @@ from __future__ import print_function
 import logging
 import time
 import os
+import sys
 
 import numpy as np
 import torch
@@ -39,7 +40,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
     for i, (input, target, target_weight, meta) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
-
+        print('train.py')
         # compute output
         output = model(input)
         target = target.cuda(non_blocking=True)
@@ -107,6 +108,8 @@ def validate(config, val_loader, val_dataset, model, criterion, output_dir,
         end = time.time()
         for i, (input, target, target_weight, meta) in enumerate(val_loader):
             # compute output
+            print('train.py')
+            p
             output = model(input)
             if config.TEST.FLIP_TEST:
                 # this part is ugly, because pytorch has not supported negative index

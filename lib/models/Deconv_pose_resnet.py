@@ -175,6 +175,10 @@ class PoseResNet(nn.Module):
         self.deconv3 = self._make_deconv(in_channels=512, out_channels=256, kernel=4)
         self.deconv4 = self._make_deconv(in_channels=256, out_channels=64, kernel=4)
 
+        self.reduc_conv1 = nn.Conv2d(in_channels=2048, out_channels=1024, kernel_size=1, stride=1, padding=0, bias=False)
+        self.reduc_conv2 = nn.Conv2d(in_channels=1024, out_channels=512, kernel_size=1, stride=1, padding=0, bias=False)
+        self.reduc_conv3 = nn.Conv2d(in_channels=512, out_channels=256, kernel_size=1, stride=1, padding=0, bias=False)
+        self.reduc_conv4 = nn.Conv2d(in_channels=256, out_channels=16, kernel_size=1, stride=1, padding=0, bias=False)
         self.final_layer = nn.Conv2d(
             in_channels=extra.NUM_DECONV_FILTERS[-1],
             out_channels=cfg.MODEL.NUM_JOINTS,
@@ -225,7 +229,7 @@ class PoseResNet(nn.Module):
                 padding=padding,
                 output_padding=output_padding,
                 bias=self.deconv_with_bias))
-        layers.append(nn.BatchNorm2d(in_channels, momentum=BN_MOMENTUM))
+        layers.append(nn.BatchNorm2d(out_channels, momentum=BN_MOMENTUM))
         layers.append(nn.ReLU(inplace=True))
 
         return nn.Sequential(*layers)
@@ -263,7 +267,6 @@ class PoseResNet(nn.Module):
     def forward(self, x):
         # Input: [32,3, 256, 256]
         # Encoder Part
-        print(x.shape)
         x = self.conv1(x)  # [32,64,128,128]
         x = self.bn1(x)
         x = self.relu(x)
@@ -277,19 +280,17 @@ class PoseResNet(nn.Module):
         # x = self.deconv_layers(x)   # 64X64X256
         x = self.deconv1(layer4_out)  # [32,1024,16, 16]
         x = torch.cat([x, layer3_out], dim=1)  # connection [32,2048,16, 16]
-        x = nn.Conv2d(in_channels=2048, out_channels=1024, kernel_size=1, stride=1, padding=0, bias=False)(x)
-
+        x = self.reduc_conv1(x) 
         x = self.deconv2(x)
         x = torch.cat([x, layer2_out], dim=1)  # connection
-        x = nn.Conv2d(in_channels=1024, out_channels=512, kernel_size=1, stride=1, padding=0, bias=False)(x)
-
+        x = self.reduc_conv2(x)
         x = self.deconv3(x)
         x = torch.cat([x, layer1_out], dim=1)  # connection
-        x = nn.Conv2d(in_channels=512, out_channels=256, kernel_size=1, stride=1, padding=0, bias=False)(x)
-
-        x = self.deconv4(x)
-        x = torch.cat([x, conv1_out], dim=1)  # connection
-        x = nn.Conv2d(in_channels=128, out_channels=16, kernel_size=1, stride=1, padding=0, bias=False)(x)
+        x = self.reduc_conv3(x)
+        x = self.reduc_conv4(x)
+        # x = nn.Conv2d(in_channels=256, out_channels=64, kernel_size=1, stride=1, padding=0, bias=False)(x)
+        # x = torch.cat([x, conv1_out], dim=1)  # connection
+        # x = nn.Conv2d(in_channels=256, out_channels=16, kernel_size=1, stride=1, padding=0, bias=False)(x)
         # x = self.final_layer(x)  # 64X64X16
 
         # Output: 64X64X16

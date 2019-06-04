@@ -12,6 +12,7 @@ import argparse
 import os
 import pprint
 import shutil
+import sys
 
 import torch
 import torch.nn.parallel
@@ -110,13 +111,13 @@ def main():
                              3,
                              config.MODEL.IMAGE_SIZE[1],
                              config.MODEL.IMAGE_SIZE[0]))
-    writer_dict['writer'].add_graph(model, (dump_input, ), verbose=False)
 
+    # writer_dict['writer'].add_graph(model, (dump_input, ), verbose=False)
     gpus = [int(i) for i in config.GPUS.split(',')]
     # nn.DataParallel(): batch size should be larger than the number of GPUs used
-    model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
-
-    # summary(model, input_size=(256, 256, 3))
+    model.cuda()
+    model = torch.nn.DataParallel(model, device_ids=gpus)
+    summary(model, input_size=(3, config.MODEL.IMAGE_SIZE[1], config.MODEL.IMAGE_SIZE[0])) #C,H,W
 
     # define loss function (criterion) and optimizer
     criterion = JointsMSELoss(
@@ -170,9 +171,10 @@ def main():
 
     best_perf = 0.0
     best_model = False
+    print('here')
     for epoch in range(config.TRAIN.BEGIN_EPOCH, config.TRAIN.END_EPOCH):
         lr_scheduler.step()
-
+        print('train start')
         # train for one epoch
         train(config, train_loader, model, criterion, optimizer, epoch,
               final_output_dir, tb_log_dir, writer_dict)
