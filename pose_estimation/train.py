@@ -112,11 +112,10 @@ def main():
                              config.MODEL.IMAGE_SIZE[1],
                              config.MODEL.IMAGE_SIZE[0]))
 
-    # writer_dict['writer'].add_graph(model, (dump_input, ), verbose=False)
+    writer_dict['writer'].add_graph(model, (dump_input, ), verbose=False)
     gpus = [int(i) for i in config.GPUS.split(',')]
     # nn.DataParallel(): batch size should be larger than the number of GPUs used
-    model.cuda()
-    model = torch.nn.DataParallel(model, device_ids=gpus)
+    model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
     summary(model, input_size=(3, config.MODEL.IMAGE_SIZE[1], config.MODEL.IMAGE_SIZE[0])) #C,H,W
 
     # define loss function (criterion) and optimizer

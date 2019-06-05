@@ -1,4 +1,4 @@
-GPUS: '2'
+GPUS: '3'
 DATA_DIR: ''
 OUTPUT_DIR: 'output'
 LOG_DIR: 'log'
@@ -17,7 +17,7 @@ DATASET:
   ROT_FACTOR: 30
   SCALE_FACTOR: 0.25
 MODEL:
-  NAME: Deconv_pose_resnet
+  NAME: pose_resnet
   PRETRAINED: 'models/pytorch/imagenet/resnet50-19c8e357.pth'
   IMAGE_SIZE:
   - 256
