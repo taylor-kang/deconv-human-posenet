@@ -14,7 +14,7 @@ DATASET:
   ROT_FACTOR: 40
   SCALE_FACTOR: 0.3
 MODEL:
-  NAME: 'Deconv_pose_resnet'
+  NAME: 'pose_resnet'
   PRETRAINED: 'models/pytorch/imagenet/resnet50-19c8e357.pth'
   IMAGE_SIZE:
   - 192
